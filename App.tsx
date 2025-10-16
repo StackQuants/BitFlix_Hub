@@ -263,7 +263,7 @@ const App: React.FC = () => {
           />
         );
       case Tab.Rankings:
-        return <LeaderboardScreen players={players} />;
+        return <LeaderboardScreen players={players} currentUser={currentUser} />;
       case Tab.Profile:
         return (
           <ProfileScreen 

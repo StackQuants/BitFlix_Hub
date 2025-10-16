@@ -5,6 +5,7 @@ import { Player } from '../types';
 interface LeaderboardListProps {
   players: (Player & { dailyWins?: number })[];
   showDailyWins?: boolean;
+  metricLabel?: string; // label for the metric badge (e.g., Daily Wins / Monthly Wins)
 }
 
 const BTCIcon: React.FC = () => (
@@ -23,7 +24,7 @@ const TrophyIcon: React.FC = () => (
 );
 
 
-const LeaderboardList: React.FC<LeaderboardListProps> = ({ players, showDailyWins = false }) => {
+const LeaderboardList: React.FC<LeaderboardListProps> = ({ players, showDailyWins = false, metricLabel = 'Wins' }) => {
   return (
     <div className="space-y-3 pb-4">
       {players.map((player, index) => (
@@ -40,7 +41,7 @@ const LeaderboardList: React.FC<LeaderboardListProps> = ({ players, showDailyWin
             {showDailyWins ? (
                 <div className="flex items-center text-sm text-yellow-300 bg-yellow-500/10 p-1.5 rounded-md">
                     <TrophyIcon/>
-                    <span className="ml-1.5 text-xs font-bold">{player.dailyWins} Wins</span>
+                  <span className="ml-1.5 text-xs font-bold">{player.dailyWins} {metricLabel}</span>
                 </div>
             ) : (
                 <div className="flex flex-col items-end">

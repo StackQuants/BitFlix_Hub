@@ -1,28 +1,56 @@
 import React, { useState, useMemo } from 'react';
-import { Player } from '../types';
+import { Player, User } from '../types';
 import LeaderboardPodium from './LeaderboardPodium';
 import LeaderboardList from './LeaderboardList';
 
 interface LeaderboardScreenProps {
     players: Player[];
+    currentUser?: User | null;
 }
 
-const DailyLeaderboardList: React.FC<{ players: Player[] }> = ({ players }) => {
-    return <LeaderboardList players={players} showDailyWins />;
+const DailyLeaderboardList: React.FC<{ players: Player[]; metricLabel?: string }> = ({ players, metricLabel = 'Daily Wins' }) => {
+    return <LeaderboardList players={players} showDailyWins metricLabel={metricLabel} />;
 };
 
-const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ players }) => {
+const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ players, currentUser }) => {
   const [activeTab, setActiveTab] = useState('Global');
   const tabs = ['Global', 'Monthly', 'Daily'];
 
-  const topPlayers = players.slice(0, 3);
-  const remainingPlayers = players.slice(3);
+  // Merge current user into leaderboards dynamically
+  const mergedPlayers = useMemo(() => {
+    if (!currentUser) return players;
+    const existingIdx = players.findIndex(p => p.name === currentUser.name);
+    const userAsPlayer: Player = {
+      rank: 999,
+      name: currentUser.name,
+      avatarUrl: currentUser.avatarUrl,
+      balance: Math.max(0, currentUser.gameHistory.reduce((sum, g) => sum + (g.result === 'win' ? 5 : 0), 0)),
+      level: 1,
+      winRate: (() => {
+        const total = currentUser.gameHistory.length || 1;
+        const wins = currentUser.gameHistory.filter(g => g.result === 'win').length;
+        return Number(((wins / total) * 100).toFixed(1));
+      })(),
+    };
+    const base = existingIdx >= 0 ? players : [...players, userAsPlayer];
+    // Rank by FP balance desc as a proxy for winnings
+    const ranked = [...base].sort((a, b) => b.balance - a.balance).map((p, i) => ({ ...p, rank: i + 1 }));
+    return ranked;
+  }, [players, currentUser]);
 
+  const topPlayers = mergedPlayers.slice(0, 3);
+  const remainingPlayers = mergedPlayers.slice(3);
+
+  // Daily: count today's wins from user history
   const dailyPlayers = useMemo(() => {
-    return [...players]
-      .map(p => ({ ...p, dailyWins: Math.floor(Math.random() * 8) + 1 }))
-      .sort((a, b) => b.dailyWins - a.dailyWins);
-  }, [players]);
+    const today = new Date().toLocaleDateString();
+    const addDailyWins = (p: Player) => {
+      if (!currentUser || p.name !== currentUser.name) return { ...p, dailyWins: Math.floor(Math.random() * 8) + 1 };
+      const dailyWins = currentUser.gameHistory.filter(g => g.result === 'win' && g.date === today).length;
+      return { ...p, dailyWins } as Player & { dailyWins: number };
+    };
+    return mergedPlayers.map(addDailyWins).sort((a, b) => (b.dailyWins || 0) - (a.dailyWins || 0));
+  }, [mergedPlayers, currentUser]);
 
   return (
     <div className="flex flex-col h-full bg-[#10131c]">
@@ -72,11 +100,13 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ players }) => {
           </>
         )}
         {activeTab === 'Daily' && (
-            <DailyLeaderboardList players={dailyPlayers} />
+            <DailyLeaderboardList players={dailyPlayers} metricLabel="Daily Wins" />
         )}
         {activeTab === 'Monthly' && (
-            <div className="text-center pt-20 text-gray-500">
-                <p>{activeTab} leaderboards coming soon.</p>
+            <div className="text-center pt-20 text-gray-400">
+              <p className="text-lg font-semibold mb-2">Monthly Leaderboard</p>
+              <p className="text-sm">Aggregated from players' daily wins and refreshed at the end of each month.</p>
+              <p className="text-xs mt-2 text-gray-500">Updates will appear here automatically at month-end. Check back soon.</p>
             </div>
         )}
       </div>
