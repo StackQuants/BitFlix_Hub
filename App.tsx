@@ -71,47 +71,83 @@ const App: React.FC = () => {
   
   const { disconnectWallet, isConnected, address } = useStacks();
 
-  const handleLogin = (address: string, name: string) => {  // ✅ Updated to accept name
-    if (address && name) {
-      // Load unlocked games from localStorage (tied to wallet address)
-      const storageKey = `bitflix_unlocked_${address}`;
-      const savedUnlockedGames = localStorage.getItem(storageKey);
-      const unlockedGames = savedUnlockedGames ? JSON.parse(savedUnlockedGames) : [];
-      
-      setCurrentUser({
-        name: name,  // ✅ Use the actual entered name
-        avatarUrl: `https://i.pravatar.cc/150?u=${address}`,
-        balance: 40,
-        gameHistory: [],
-        walletAddress: address,
-        unlockedGames: unlockedGames, // Load saved unlocked games
-        streakData: {
-          currentWinStreak: 0,
-          bestWinStreak: 0,
-          currentPlayStreak: 0,
-          bestPlayStreak: 0,
-          lastPlayedDate: '',
-          streakActive: false,
-          totalGamesPlayed: 0,
-        },
-      });
-      
-      console.log('✅ Wallet connected:', address);
-      console.log('👤 User name set to:', name);  // ✅ Log the actual name
-      console.log('📂 Loaded unlocked games:', unlockedGames);
-      console.log('🔍 localStorage key:', storageKey);
-    } else {
-      alert('Please connect your wallet and enter your name.');
+  const getProfileKey = (walletAddress: string) => `bitflix_profile_${walletAddress}`;
+
+  const loadProfile = (walletAddress: string): User | null => {
+    try {
+      const raw = localStorage.getItem(getProfileKey(walletAddress));
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      return parsed as User;
+    } catch {
+      return null;
     }
+  };
+
+  const saveProfile = (user: User) => {
+    if (!user.walletAddress) return;
+    try {
+      localStorage.setItem(getProfileKey(user.walletAddress), JSON.stringify(user));
+    } catch {}
+  };
+
+  const handleLogin = (address: string, name: string) => {
+    if (!(address && name)) {
+      alert('Please connect your wallet and enter your name.');
+      return;
+    }
+
+    const existing = loadProfile(address);
+    if (existing) {
+      const updated = { ...existing, name, walletAddress: address } as User;
+      setCurrentUser(updated);
+      saveProfile(updated);
+      console.log('🔑 Loaded existing profile for:', address);
+      return;
+    }
+
+    const storageKey = `bitflix_unlocked_${address}`;
+    const savedUnlockedGames = localStorage.getItem(storageKey);
+    const unlockedGames = savedUnlockedGames ? JSON.parse(savedUnlockedGames) : [];
+
+    const newUser: User = {
+      name,
+      avatarUrl: `https://i.pravatar.cc/150?u=${address}`,
+      balance: 40,
+      gameHistory: [],
+      walletAddress: address,
+      unlockedGames,
+      streakData: {
+        currentWinStreak: 0,
+        bestWinStreak: 0,
+        currentPlayStreak: 0,
+        bestPlayStreak: 0,
+        lastPlayedDate: '',
+        streakActive: false,
+        totalGamesPlayed: 0,
+      },
+    };
+
+    setCurrentUser(newUser);
+    saveProfile(newUser);
+    console.log('✅ Wallet connected:', address);
+    console.log('👤 User name set to:', name);
+    console.log('📂 Loaded unlocked games:', unlockedGames);
+    console.log('💾 Profile saved:', getProfileKey(address));
   };
 
   React.useEffect(() => {
     if (isConnected && address && !currentUser) {
       console.log('🔄 Auto-login triggered from wallet connection');
-      // For auto-login, try to get the name from localStorage
-      const userData = localStorage.getItem('bitflix_user');
-      const userName = userData ? JSON.parse(userData).name : `Player${address.slice(-4)}`;
-      handleLogin(address, userName);
+      const existing = loadProfile(address);
+      if (existing) {
+        setCurrentUser(existing);
+        console.log('🔑 Loaded profile on auto-login');
+      } else {
+        const userData = localStorage.getItem('bitflix_user');
+        const userName = userData ? JSON.parse(userData).name : `Player${address.slice(-4)}`;
+        handleLogin(address, userName);
+      }
     }
   }, [isConnected, address, currentUser]);
 
@@ -143,6 +179,7 @@ const App: React.FC = () => {
     
     // Update state immediately
     setCurrentUser(updatedUser);
+    saveProfile(updatedUser);
     console.log('📝 State updated with unlocked game');
     
     // Save to localStorage for persistence (tied to wallet address)
@@ -202,6 +239,7 @@ const App: React.FC = () => {
       ],
     };
     setCurrentUser(updatedUser);
+    saveProfile(updatedUser);
 
     setPlayers(prevPlayers =>
       prevPlayers.map(p =>
