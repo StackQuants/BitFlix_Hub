@@ -132,7 +132,7 @@ const EntryScreen: React.FC<EntryScreenProps> = ({ onLogin }) => {
               <div className="relative w-full h-full p-1 rounded-full bg-gradient-to-br from-purple-500 via-green-400 to-cyan-400">
                 <div className="bg-[#10131c] rounded-full w-full h-full flex items-center justify-center overflow-hidden">
                   <img
-                    src="image1.png"
+                    src="/public/image1.png"
                     alt="Person with VR headset"
                     className="w-full h-full object-cover"
                   />
