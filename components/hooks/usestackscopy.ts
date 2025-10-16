@@ -82,7 +82,7 @@ export const useStacks = () => {
         showConnect({
           appDetails: {
             name: 'BITFLIX',
-            icon: window.location.origin + '/image1.png',
+            icon: window.location.origin + import.meta.env.BASE_URL + 'image1.png',
           },
           onFinish: (data: any) => {
             setIsConnecting(false);
