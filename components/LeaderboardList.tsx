@@ -44,8 +44,8 @@ const LeaderboardList: React.FC<LeaderboardListProps> = ({ players, showDailyWin
                 </div>
             ) : (
                 <div className="flex flex-col items-end">
-                    <span className="font-bold text-orange-400 flex items-center"><BTCIcon /> <span className="ml-1">{player.balance.toFixed(3)}</span></span>
-                    <span className="text-xs text-gray-500">STX</span>
+                    <span className="font-bold text-orange-400 flex items-center"><BTCIcon /> <span className="ml-1">{player.balance.toFixed(0)}</span></span>
+                    <span className="text-xs text-gray-500">FP</span>
                 </div>
             )}
           </div>

@@ -147,7 +147,7 @@ const GameModeSelector: React.FC<{
                 </div>
                 <div className="flex items-center gap-2">
                   <span>✓</span>
-                  <span>Win STX rewards</span>
+                  <span>Win FP rewards</span>
                 </div>
               </div>
             </div>
@@ -843,7 +843,7 @@ const ChessGameScreen: React.FC<ChessGameScreenProps> = ({ game, user, players, 
                 </h2>
                 <p className="text-lg mb-4 text-gray-300">{gameOver.reason}</p>
                 <p className={`text-3xl font-bold ${gameOver.winner === 'white' ? 'text-green-400' : gameOver.winner === 'draw' ? 'text-yellow-400' : 'text-red-400'}`}>
-                 {gameOver.winner === 'white' ? '+' : gameOver.winner === 'draw' ? '' : ''}{gameOver.winner === 'white' ? '5' : '0'} STX
+                 {gameOver.winner === 'white' ? '+' : gameOver.winner === 'draw' ? '' : ''}{gameOver.winner === 'white' ? '5' : '0'} FP
                 </p>
             </div>
         </div>
